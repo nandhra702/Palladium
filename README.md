@@ -5,8 +5,8 @@ Django, supabase, babylon js
 -> pip install Supabase
 
 
-npm install three three-globe
-pip install django
-pip install dotenv
-pip install selenium
-pip install smthing else also i forgot, while running the command : python3 manage.py runserver, it will give error, install that package
+-> npm install three three-globe,
+-> pip install django
+-> pip install dotenv
+-> pip install selenium
+-> pip install smthing else also i forgot, while running the command : python3 manage.py runserver, it will give error, install that package
