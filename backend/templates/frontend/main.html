@@ -1,13 +1,17 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
     <title>PALLADIUM</title>
+    <link rel="stylesheet" href="{% static 'news/style.css' %}">
 </head>
 <body>
     <h1>PALLADIUM</h1>
-    
+    <div id="canvas-container"></div>
+
+    <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+    <script type= "module" src="{% static 'news/globe.js' %}"></script>
 </body>
 </html>
