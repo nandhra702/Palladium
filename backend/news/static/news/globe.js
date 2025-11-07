@@ -38,11 +38,12 @@ const stars = new THREE.Points(starGeometry, starMaterial);
 scene.add(stars);
 
 // === GLOBE ===
-const globeGeometry = new THREE.SphereGeometry(1, 32, 32);
+const globeGeometry = new THREE.SphereGeometry(1, 64, 64);
 
+// ✅ ADD YOUR IMAGE AS TEXTURE HERE
+const globeTexture = new THREE.TextureLoader().load('static/news/photoroom.png'); // replace with your JPEG filename
 const globeMaterial = new THREE.MeshPhongMaterial({
-    color: 0x2233ff,
-    emissive: 0x112244,
+    map: globeTexture,
     shininess: 25,
     specular: 0x333333
 });
@@ -51,65 +52,59 @@ const globe = new THREE.Mesh(globeGeometry, globeMaterial);
 scene.add(globe);
 
 // === LIGHTING ===
-const ambientLight = new THREE.AmbientLight(0x404040, 1);
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.6); // brighter ambient light
 scene.add(ambientLight);
 
 const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-directionalLight.position.set(5, 3, 5);
 scene.add(directionalLight);
 
-// === MOUSE INTERACTION (FIXED) ===
+// === DRAG CAMERA AROUND GLOBE ===
 let isDragging = false;
 let previousMousePosition = { x: 0, y: 0 };
+let rotation = { x: 0, y: 0 }; // store rotation angles
 
-// Mouse down event
-document.addEventListener('mousedown', (e) => {
+renderer.domElement.addEventListener('mousedown', (e) => {
     isDragging = true;
     previousMousePosition = { x: e.clientX, y: e.clientY };
+    e.preventDefault();
 });
 
-// Mouse move event
-document.addEventListener('mousemove', (e) => {
+renderer.domElement.addEventListener('mousemove', (e) => {
     if (isDragging) {
-        // Calculate mouse movement delta
         const deltaX = e.clientX - previousMousePosition.x;
         const deltaY = e.clientY - previousMousePosition.y;
-        
-        // Rotate globe (inverted controls feel more natural)
-        globe.rotation.y += deltaX * 0.005;
-        globe.rotation.x += deltaY * 0.005;
-        
-        // Update previous position
+
+        rotation.y += deltaX * 0.005;
+        rotation.x += deltaY * 0.005;
+        rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, rotation.x));
+
         previousMousePosition = { x: e.clientX, y: e.clientY };
     }
+    e.preventDefault();
 });
 
-// Mouse up event
-document.addEventListener('mouseup', () => {
-    isDragging = false;
-});
-
-// Mouse leave event
-document.addEventListener('mouseleave', () => {
-    isDragging = false;
-});
+renderer.domElement.addEventListener('mouseup', () => { isDragging = false; });
+renderer.domElement.addEventListener('mouseleave', () => { isDragging = false; });
 
 // === ANIMATION LOOP ===
 function animate() {
     requestAnimationFrame(animate);
-    
-    // Slowly rotate stars
-    // stars.rotation.y += 0.0002;
-    
-    // Render scene
+
+    // Update camera position based on rotation
+    const radius = 3;
+    camera.position.x = radius * Math.sin(rotation.y) * Math.cos(rotation.x);
+    camera.position.y = radius * Math.sin(rotation.x);
+    camera.position.z = radius * Math.cos(rotation.y) * Math.cos(rotation.x);
+    camera.lookAt(globe.position);
+
     renderer.render(scene, camera);
 }
-
 animate();
 
 // === HANDLE WINDOW RESIZE ===
 window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
+    directionalLight.position.copy(camera.position);
     renderer.setSize(window.innerWidth, window.innerHeight);
 });
