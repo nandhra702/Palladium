@@ -40,7 +40,7 @@ scene.add(stars);
 // === GLOBE ===
 const globeGeometry = new THREE.SphereGeometry(1, 64, 64);
 
-// ✅ ADD YOUR IMAGE AS TEXTURE HERE
+
 const globeTexture = new THREE.TextureLoader().load('static/news/photoroom.png'); // replace with your JPEG filename
 const globeMaterial = new THREE.MeshPhongMaterial({
     map: globeTexture,
