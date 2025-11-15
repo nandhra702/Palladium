@@ -8,10 +8,19 @@
     <link rel="stylesheet" href="{% static 'news/style.css' %}">
 </head>
 <body>
-    <h1>PALLADIUM</h1>
+    <section class="title_section">
+        <div class = "headings">
+        
+        <h1>PALLADIUM</h1>
+        <h3>Explore the planet - through headlines</h3>
+    </div>
+    </section >
+    
+    <section class = "space">
     <div id="canvas-container"></div>
-
     <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
     <script type= "module" src="{% static 'news/globe.js' %}"></script>
+   
+    </section>
 </body>
 </html>

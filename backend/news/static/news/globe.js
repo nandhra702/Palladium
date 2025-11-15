@@ -8,7 +8,7 @@ const camera = new THREE.PerspectiveCamera(
     0.1, 
     1000
 );
-camera.position.z = 3;
+camera.position.z = 30;
 
 // Create renderer
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -41,7 +41,7 @@ scene.add(stars);
 const globeGeometry = new THREE.SphereGeometry(1, 64, 64);
 
 
-const globeTexture = new THREE.TextureLoader().load('static/news/photoroom.png'); // replace with your JPEG filename
+const globeTexture = new THREE.TextureLoader().load('static/news/equitangular_daymap.jpg'); // replace with your JPEG filename
 const globeMaterial = new THREE.MeshPhongMaterial({
     map: globeTexture,
     shininess: 25,
@@ -51,8 +51,31 @@ const globeMaterial = new THREE.MeshPhongMaterial({
 const globe = new THREE.Mesh(globeGeometry, globeMaterial);
 scene.add(globe);
 
+// === FUNCTION TO CONVERT LAT/LON TO 3D VECTOR ===
+
+function latLonToVector3(lat, lon, radius = 1.05) {
+    const phi = (90 - lat) * (Math.PI / 180);
+    const theta = (lon + 180) * (Math.PI / 180);
+
+    return new THREE.Vector3(
+        -(radius * Math.sin(phi) * Math.cos(theta)),
+        radius * Math.cos(phi),
+        radius * Math.sin(phi) * Math.sin(theta)
+    );
+}
+
+const markerGeometry = new THREE.SphereGeometry(0.02, 16, 16);
+const markerMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+const indiaMarker = new THREE.Mesh(markerGeometry, markerMaterial);
+
+indiaMarker.position.copy(latLonToVector3(20.6, 78.96));
+indiaMarker.userData = { country: "India" };
+
+scene.add(indiaMarker);
+
+
 // === LIGHTING ===
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.6); // brighter ambient light
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.99); // brighter ambient light
 scene.add(ambientLight);
 
 const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
