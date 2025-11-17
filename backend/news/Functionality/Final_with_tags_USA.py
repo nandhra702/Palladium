@@ -6,9 +6,27 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException, WebDriverException
 import time
+from supabase import create_client
+import json
+import sys
+import os
 
+# # Add the project root to Python path
+# ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
+# sys.path.append(ROOT_DIR)
+
+SUPABASE_URL="https://mydfflfgggqoliryamtn.supabase.co"
+SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15ZGZmbGZnZ2dxb2xpcnlhbXRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE2Nzg5NTksImV4cCI6MjA3NzI1NDk1OX0.mVM685NQKkxUV0ja5TZC3jf3uio9HhW6_ugVLHmgb5U"
 # Import the ArticleTagger from tagging.py
 from tagging import ArticleTagger
+
+# Import Supabase credentials from settings.py
+# try:
+#     from backend.settings import SUPABASE_URL, SUPABASE_KEY
+# except ImportError:
+#     print("✗ Error: Could not import SUPABASE_URL and SUPABASE_KEY from settings.py")
+#     print("  Make sure settings.py exists with these variables defined.")
+#     exit(1)
 
 # ---------- MAIN SCRAPER WITH TAGGING ----------
 def scrape_and_tag_articles():
@@ -17,10 +35,18 @@ def scrape_and_tag_articles():
     # Initialize tagger
     tagger = ArticleTagger()
     
+    # Initialize Supabase client
+    try:
+        supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+        print("✓ Connected to Supabase\n")
+    except Exception as e:
+        print(f"✗ Failed to connect to Supabase: {e}")
+        return
+    
     # Setup browser with page load timeout
     try:
         driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
-        driver.set_page_load_timeout(60)  # Maximum 60 seconds to load any page
+        driver.set_page_load_timeout(30)  # Maximum 30 seconds to load any page
         wait = WebDriverWait(driver, 10)
         print("✓ Browser initialized successfully\n")
     except WebDriverException as e:
@@ -53,7 +79,7 @@ def scrape_and_tag_articles():
             link = r.get_attribute("href")
             if title and link and link.startswith("https://"):
                 articles.append((title, link))
-            if len(articles) == 7:
+            if len(articles) == 5:
                 break
         except Exception:
             continue
@@ -72,7 +98,7 @@ def scrape_and_tag_articles():
             # Try to load the page with timeout protection
             try:
                 driver.get(link)
-                time.sleep(3)  # Reduced from 3 to 2 seconds
+                time.sleep(2)  # Reduced from 3 to 2 seconds
             except TimeoutException:
                 print("    ✗ Page load timeout (30s exceeded) - skipping")
                 continue
@@ -82,7 +108,7 @@ def scrape_and_tag_articles():
             
             # Wait for article with timeout
             try:
-                article = WebDriverWait(driver, 25).until(
+                article = WebDriverWait(driver, 15).until(
                     EC.presence_of_element_located((By.TAG_NAME, "article"))
                 )
             except TimeoutException:
@@ -117,13 +143,32 @@ def scrape_and_tag_articles():
                 tags = tagger.tag_article(content, threshold=2)
                 
                 # Store result
-                tagged_results.append({
+                article_data = {
                     "title": title,
                     "link": link,
-                    "tags": tags
-                })
+                    "tags": tags,
+                    "content": content
+                }
+                tagged_results.append(article_data)
                 
-                print(f"    ✓ Tagged as: {', '.join(tags)}")
+                # Insert into Supabase
+                try:
+                    # Prepare data for insertion
+                    db_data = {
+                        "headline": json.dumps({"title": title}),  # Store as JSON
+                        "link": json.dumps({"url": link}),  # Store as JSON
+                        "content": "\n\n".join(content),  # Join paragraphs with double newline
+                        "tags": tags  # PostgreSQL text array
+                    }
+                    
+                    response = supabase.table("USA_news").insert(db_data).execute()
+                    print(f"    ✓ Tagged as: {', '.join(tags)}")
+                    print(f"    ✓ Saved to database (ID: {response.data[0]['id']})")
+                    
+                except Exception as e:
+                    print(f"    ✓ Tagged as: {', '.join(tags)}")
+                    print(f"    ✗ Database error: {e}")
+                    # Continue processing even if DB insert fails
                 
             except NoSuchElementException:
                 print("    ✗ Could not extract content - skipping")
@@ -148,10 +193,11 @@ def scrape_and_tag_articles():
         print(f"[{idx}] {result['title']}")
         print(f"    Link: {result['link']}")
         print(f"    Tags: {', '.join(result['tags'])}")
+        print(f"    Paragraphs: {len(result['content'])}")
         print()
     
     print("=" * 80)
-    print(f"Successfully tagged {len(tagged_results)} out of {len(articles)} articles")
+    print(f"Successfully tagged and saved {len(tagged_results)} out of {len(articles)} articles to database")
     print("=" * 80)
     
     return tagged_results
