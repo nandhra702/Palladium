@@ -23,3 +23,6 @@ def fetch_latest_news():
 
     driver.quit()
     return titles, links
+
+
+fetch_latest_news()
