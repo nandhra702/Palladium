@@ -19,6 +19,7 @@ def fetch_latest_news():
             if title and link:
                 titles.append(title)
                 links.append(link)
+                print (f"Title: {title}\nLink: {link}\n")
 
 
     driver.quit()
