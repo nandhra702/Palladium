@@ -15,8 +15,7 @@ import os
 # ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
 # sys.path.append(ROOT_DIR)
 
-SUPABASE_URL="https://mydfflfgggqoliryamtn.supabase.co"
-SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15ZGZmbGZnZ2dxb2xpcnlhbXRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE2Nzg5NTksImV4cCI6MjA3NzI1NDk1OX0.mVM685NQKkxUV0ja5TZC3jf3uio9HhW6_ugVLHmgb5U"
+
 # Import the ArticleTagger from tagging.py
 from tagging import ArticleTagger
 
