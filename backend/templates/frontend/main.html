@@ -1,4 +1,4 @@
-{% load static %}
+{%load static%}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,21 +6,157 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PALLADIUM</title>
     <link rel="stylesheet" href="{% static 'news/style.css' %}">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-    <section class="title_section">
-        <div class = "headings">
-        
-        <h1>PALLADIUM</h1>
-        <h3>Explore the planet - through headlines</h3>
+    <!-- Side Panel -->
+    <div id="infoPanel" style="
+        position: fixed;
+        right: 0;
+        top: 0;
+        width: 0;
+        height: 100vh;
+        background: linear-gradient(135deg, rgba(21, 220, 81, 0.95), rgba(15, 180, 65, 0.95));
+        color: white;
+        overflow-y: auto;
+        overflow-x: hidden;
+        transition: width 0.4s ease;
+        z-index: 10;
+        box-shadow: -5px 0 20px rgba(0, 0, 0, 0.3);
+    ">
+        <div style="padding: 30px; position: relative;">
+            <button id="closePanel" style="
+                position: absolute;
+                top: 20px;
+                right: 20px;
+                background: rgba(255, 255, 255, 0.2);
+                border: 2px solid white;
+                color: white;
+                width: 35px;
+                height: 35px;
+                border-radius: 50%;
+                cursor: pointer;
+                font-size: 20px;
+                font-weight: bold;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: all 0.3s ease;
+            " onmouseover="this.style.background='rgba(255, 255, 255, 0.3)'" onmouseout="this.style.background='rgba(255, 255, 255, 0.2)'">×</button>
+            
+            <h2 id="countryTitle" style="
+                margin-top: 0;
+                font-size: 2rem;
+                margin-bottom: 20px;
+                font-family: 'CUSTOM', sans-serif;
+                letter-spacing: 0.1em;
+            "></h2>
+            
+            <div id="panelContent" style="
+                border-top: 2px solid rgba(255, 255, 255, 0.3);
+                padding-top: 20px;
+            ">
+                <p style="margin: 0; opacity: 0.9;">Click a country marker to see news...</p>
+            </div>
+        </div>
     </div>
-    </section >
+
+    <!-- Article Modal (Center Pane) -->
+    <div id="articleModal" style="
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        z-index: 100;
+        justify-content: center;
+        align-items: center;
+        backdrop-filter: blur(5px);
+    ">
+        <div style="
+            background: linear-gradient(135deg, #1a1a1a, #2d2d2d);
+            color: white;
+            width: 90%;
+            max-width: 800px;
+            max-height: 85vh;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 50px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+        ">
+            <!-- Modal Header -->
+            <div style="
+                padding: 25px 30px;
+                border-bottom: 2px solid rgba(21, 220, 81, 0.3);
+                display: flex;
+                justify-content: space-between;
+                align-items: start;
+            ">
+                <h2 id="modalHeadline" style="
+                    margin: 0;
+                    font-size: 1.5rem;
+                    line-height: 1.4;
+                    flex: 1;
+                    padding-right: 20px;
+                "></h2>
+                <button onclick="closeArticleModal()" style="
+                    background: rgba(255, 255, 255, 0.1);
+                    border: 2px solid rgba(255, 255, 255, 0.3);
+                    color: white;
+                    width: 35px;
+                    height: 35px;
+                    border-radius: 50%;
+                    cursor: pointer;
+                    font-size: 20px;
+                    font-weight: bold;
+                    transition: all 0.3s ease;
+                    flex-shrink: 0;
+                " onmouseover="this.style.background='rgba(255, 255, 255, 0.2)'" onmouseout="this.style.background='rgba(255, 255, 255, 0.1)'">×</button>
+            </div>
+            
+            <!-- Modal Content -->
+            <div id="modalContent" style="
+                padding: 30px;
+                overflow-y: auto;
+                flex: 1;
+                font-size: 1rem;
+                line-height: 1.8;
+            "></div>
+            
+            <!-- Modal Footer -->
+            <div style="
+                padding: 20px 30px;
+                border-top: 2px solid rgba(21, 220, 81, 0.3);
+                background: rgba(0, 0, 0, 0.2);
+            ">
+                <a id="modalLink" href="#" target="_blank" style="
+                    display: inline-block;
+                    background: rgba(21, 220, 81, 0.8);
+                    color: white;
+                    padding: 12px 24px;
+                    border-radius: 8px;
+                    text-decoration: none;
+                    font-weight: bold;
+                    transition: all 0.3s ease;
+                " onmouseover="this.style.background='rgba(21, 220, 81, 1)'" onmouseout="this.style.background='rgba(21, 220, 81, 0.8)'">📰 Read Full Article on Original Site</a>
+            </div>
+        </div>
+    </div>
+
+    <section class="title_section">
+        <div class="headings">
+            <h1>PALLADIUM</h1>
+            <h3>Explore the planet - through headlines</h3>
+        </div>
+    </section>
     
-    <section class = "space">
-    <div id="canvas-container"></div>
-    <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
-    <script type= "module" src="{% static 'news/globe.js' %}"></script>
-   
+    <section class="space">
+        <div id="canvas-container"></div>
+        <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+        <script type="module" src="{% static 'news/globe.js' %}"></script>
     </section>
 </body>
 </html>

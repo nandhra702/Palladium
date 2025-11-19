@@ -8,7 +8,8 @@
 }
 
 
-html,body {
+html,
+body {
     margin: 0;
     padding: 0;
     height: 100%;
@@ -16,28 +17,29 @@ html,body {
     font-family: Arial, Helvetica, sans-serif;
     background-color: rgba(0, 0, 0, 0.75);
     overflow: auto;
-    
+
 }
 
 .title_section {
-        height: 100vh;
-        color: white;
-        width: 100%;
-        background-color: black;
-        justify-content: center;
-        align-items: center;
-        display: flex;
+    height: 100vh;
+    color: white;
+    width: 100%;
+    background-color: black;
+    justify-content: center;
+    align-items: center;
+    display: flex;
 }
 
-.headings{
+.headings {
     font-family: 'CUSTOM', sans-serif;
     text-align: center;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    
+
 }
+
 .headings h1 {
     color: rgb(247, 24, 247);
     font-family: 'CUSTOM', sans-serif;
@@ -65,7 +67,7 @@ html,body {
 }
 
 
-.space{
+.space {
     width: 100vw;
     height: 100vh;
     display: block;
@@ -74,4 +76,146 @@ html,body {
 
 .space:active {
     cursor: grabbing;
+}
+
+.loader {
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-top: 3px solid white;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+#infoPanel {
+    position: fixed;
+    right: 0;
+    top: 0;
+    width: 0;
+    height: 100vh;
+    background: linear-gradient(135deg, rgba(21, 220, 81, 0.95), rgba(15, 180, 65, 0.95));
+    color: white;
+    overflow-y: auto;
+    transition: width 0.4s ease;
+    z-index: 20;
+    box-shadow: -5px 0 20px rgba(0, 0, 0, 0.3);
+}
+
+.panel-inner {
+    padding: 30px;
+    position: relative;
+}
+
+#closePanel {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    font-size: 20px;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    border: 2px solid white;
+}
+
+#panelContent {
+    margin-top: 25px;
+    border-top: 2px solid rgba(255, 255, 255, 0.3);
+    padding-top: 20px;
+}
+
+/* ===== news list item ===== */
+.news-item {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    border-left: 3px solid white;
+    cursor: pointer;
+    transition: 0.25s;
+}
+
+.news-item:hover {
+    background: rgba(255, 255, 255, 0.18);
+    transform: translateX(-6px);
+}
+
+/* ======== ARTICLE MODAL ======== */
+#articleModal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(4px);
+    z-index: 100;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-box {
+    width: 90%;
+    max-width: 820px;
+    background: #1e1e1e;
+    border-radius: 15px;
+    display: flex;
+    flex-direction: column;
+    max-height: 85vh;
+    overflow: hidden;
+}
+
+.modal-header,
+.modal-footer {
+    padding: 20px 30px;
+    background: #111;
+}
+
+.modal-header {
+    border-bottom: 1px solid rgba(21, 220, 81, 0.4);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.modal-body {
+    padding: 30px;
+    overflow-y: auto;
+    line-height: 1.7;
+}
+
+#closeModalBtn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    font-size: 20px;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.25);
+    border: 2px solid white;
+    color: white;
+}
+
+#modalLink {
+    display: inline-block;
+    background: rgba(21, 220, 81, 0.9);
+    padding: 12px 24px;
+    font-weight: bold;
+    border-radius: 8px;
+    color: white;
+    text-decoration: none;
+}
+
+#modalLink:hover {
+    background: rgba(21, 220, 81, 1);
 }
