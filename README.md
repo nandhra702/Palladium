@@ -10,3 +10,6 @@ Django, supabase, babylon js
 -> pip install dotenv
 -> pip install selenium
 -> pip install smthing else also i forgot, while running the command : python3 manage.py runserver, it will give error, install that package
+
+
+![Demo GIF](https://github.com/nandhra702/Palladium/PALLADIUM_DEMO.gif)
