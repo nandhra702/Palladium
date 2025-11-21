@@ -2,6 +2,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException, WebDriverException
@@ -9,12 +10,100 @@ import time
 from supabase import create_client
 import json
 
-# SUPABASE keys (temporary local)
-SUPABASE_URL = "https://mydfflfgggqoliryamtn.supabase.co"
-SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15ZGZmbGZnZ2dxb2xpcnlhbXRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE2Nzg5NTksImV4cCI6MjA3NzI1NDk1OX0.mVM685NQKkxUV0ja5TZC3jf3uio9HhW6_ugVLHmgb5U"
 
 # Import ArticleTagger
 from tagging import ArticleTagger
+
+SUPABASE_URL="https://mydfflfgggqoliryamtn.supabase.co"
+SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15ZGZmbGZnZ2dxb2xpcnlhbXRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE2Nzg5NTksImV4cCI6MjA3NzI1NDk1OX0.mVM685NQKkxUV0ja5TZC3jf3uio9HhW6_ugVLHmgb5U"
+
+
+def create_driver():
+    """Create a fresh Chrome driver with optimized settings."""
+    chrome_options = Options()
+    chrome_options.add_argument('--disable-blink-features=AutomationControlled')
+    chrome_options.add_argument('--disable-dev-shm-usage')
+    chrome_options.add_argument('--no-sandbox')
+    chrome_options.add_argument('--disable-gpu')
+    chrome_options.add_argument('--disable-extensions')
+    chrome_options.add_argument('--disable-infobars')
+    chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
+    chrome_options.add_experimental_option('useAutomationExtension', False)
+    
+    # Reduce memory usage
+    chrome_options.add_argument('--disable-images')
+    chrome_options.add_argument('--blink-settings=imagesEnabled=false')
+    
+    driver = webdriver.Chrome(
+        service=Service(ChromeDriverManager().install()),
+        options=chrome_options
+    )
+    driver.set_page_load_timeout(20)  # Reduced from 30
+    return driver
+
+
+def safe_get_page(driver, url, max_retries=2):
+    """Safely load a page with timeout handling and retries."""
+    for attempt in range(max_retries):
+        try:
+            driver.get(url)
+            time.sleep(1.5)
+            return True
+        except TimeoutException:
+            print(f"    ⚠ Timeout on attempt {attempt + 1}/{max_retries}")
+            if attempt < max_retries - 1:
+                try:
+                    driver.execute_script("window.stop();")
+                except:
+                    pass
+                time.sleep(1)
+            else:
+                return False
+        except Exception as e:
+            print(f"    ✗ Error loading page: {type(e).__name__}")
+            return False
+    return False
+
+
+def extract_article_content(driver):
+    """Extract article content with multiple fallback strategies."""
+    content = []
+    
+    # Strategy 1: Try specific NDTV selectors
+    selectors = [
+        "div.sp_txt p",
+        "div.story__content p",
+        "div.story_content p",
+        "div[class*='story'] p"
+    ]
+    
+    for selector in selectors:
+        try:
+            elements = WebDriverWait(driver, 3).until(
+                EC.presence_of_all_elements_located((By.CSS_SELECTOR, selector))
+            )
+            temp_content = [p.text.strip() for p in elements if p.text.strip()]
+            
+            if len(temp_content) >= 3:  # At least 3 paragraphs
+                content = temp_content
+                print(f"    ✓ Found {len(content)} paragraphs ({selector})")
+                return content
+        except:
+            continue
+    
+    # Strategy 2: Fallback to all paragraphs
+    if not content:
+        try:
+            all_paragraphs = driver.find_elements(By.TAG_NAME, "p")
+            content = [p.text.strip() for p in all_paragraphs 
+                      if p.text.strip() and len(p.text.strip()) > 50]
+            if len(content) >= 3:
+                print(f"    ✓ Found {len(content)} paragraphs (fallback)")
+                return content
+        except:
+            pass
+    
+    return content
 
 
 def scrape_and_tag_articles():
@@ -31,27 +120,31 @@ def scrape_and_tag_articles():
         print(f"✗ Failed to connect to Supabase: {e}")
         return
 
-    # Setup browser
+    # Clear existing data
+    supabase.table("India_news").delete().neq("id", -1).execute()
+
+    # Setup initial browser
     try:
-        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
-        driver.set_page_load_timeout(30)
-        wait = WebDriverWait(driver, 10)
-        print("✓ Browser initialized successfully\n")
+        driver = create_driver()
+        print("✓ Browser initialized\n")
     except WebDriverException as e:
-        print(f"✗ Failed to initialize browser: {e}")
+        print(f"✗ Browser error: {e}")
         return
 
     # Load NDTV latest news page
     try:
-        driver.get("https://www.ndtv.com/latest")
-        print("✓ Page loaded, waiting for content...")
-        time.sleep(3)  # Give page time to load
+        if not safe_get_page(driver, "https://www.ndtv.com/latest"):
+            print("✗ Failed to load main page")
+            driver.quit()
+            return
+        print("✓ Page loaded successfully")
+        time.sleep(2)
     except Exception as e:
         print(f"✗ Failed to load main page: {e}")
         driver.quit()
         return
 
-    # Find article containers using the working selector from your code
+    # Find article containers
     try:
         rows = driver.find_elements(By.CLASS_NAME, "NwsLstPg_ttl")
         print(f"✓ Found {len(rows)} article containers\n")
@@ -60,7 +153,7 @@ def scrape_and_tag_articles():
         driver.quit()
         return
 
-    # Extract first 5 articles (using your working code logic)
+    # Extract first 10 articles
     articles = []
     for i in rows:
         try:
@@ -72,7 +165,7 @@ def scrape_and_tag_articles():
                 articles.append((title, link))
                 print(f"✓ Found: {title[:50]}...")
 
-            if len(articles) == 5:
+            if len(articles) == 10:
                 break
         except Exception:
             continue
@@ -82,48 +175,46 @@ def scrape_and_tag_articles():
         driver.quit()
         return
 
-    print(f"\n✓ Extracted {len(articles)} articles to process")
-    print("=" * 80)
-
+    print(f"\n✓ Extracted {len(articles)} articles to process\n")
+    
     # Results
     tagged_results = []
-
-    # Visit each article and extract content
+    
+    # Process articles with periodic browser refresh
     for idx, (title, link) in enumerate(articles, start=1):
-        print(f"\n[{idx}/{len(articles)}] Processing: {title[:60]}...")
+        print(f"[{idx}/{len(articles)}] Processing: {title[:60]}...")
+
+        # Refresh browser every 3 articles to prevent memory issues
+        if idx > 1 and idx % 3 == 0:
+            print("    ♻ Refreshing browser...")
+            try:
+                driver.quit()
+            except:
+                pass
+            time.sleep(1)
+            try:
+                driver = create_driver()
+                print("    ✓ Browser refreshed")
+            except Exception as e:
+                print(f"    ✗ Failed to refresh browser: {e}")
+                break
 
         try:
-            # Load article page
-            driver.get(link)
-            print("    ✓ Page opened, extracting content...")
-            time.sleep(2)
-
-            # NDTV article content extraction - using exact selector from HTML
-            content = []
+            # Load article page with retry
+            if not safe_get_page(driver, link):
+                print("    ✗ Could not load page - skipping")
+                continue
             
-            try:
-                # Wait for the filteredParagraphs to load
-                WebDriverWait(driver, 10).until(
-                    EC.presence_of_element_located((By.CLASS_NAME, "filteredParagraphs"))
-                )
-                
-                # Extract all paragraphs with class "filteredParagraphs"
-                paragraphs = driver.find_elements(By.CLASS_NAME, "filteredParagraphs")
-                content = [p.text.strip() for p in paragraphs if p.text.strip()]
-                
-                print(f"    ✓ Extracted {len(content)} paragraphs from article")
-                
-            except TimeoutException:
-                print("    ✗ Could not find article paragraphs - skipping")
-            except Exception as e:
-                print(f"    ✗ Error extracting content: {type(e).__name__}")
+            print("    ✓ Page loaded, extracting...")
 
-            # If still no content found, skip article
-            if not content:
-                print("    ✗ No usable text extracted - skipping")
+            # Extract content
+            content = extract_article_content(driver)
+
+            if not content or len(content) < 2:
+                print("    ✗ Insufficient content - skipping")
                 continue
 
-            # Tag article using your tagger
+            # Tag article
             print("    → Tagging article...")
             tags = tagger.tag_article(content, threshold=2)
 
@@ -145,14 +236,14 @@ def scrape_and_tag_articles():
                     "tags": tags
                 }
                 response = supabase.table("India_news").insert(db_data).execute()
-                print(f"    ✓ Tagged as: {', '.join(tags)}")
+                print(f"    ✓ Tagged: {', '.join(tags)}")
                 print(f"    ✓ Saved to DB (ID: {response.data[0]['id']})")
             except Exception as e:
-                print(f"    ✓ Tagged as: {', '.join(tags)}")
-                print(f"    ✗ Database error: {e}")
+                print(f"    ✓ Tagged: {', '.join(tags)}")
+                print(f"    ✗ DB error: {str(e)[:50]}")
 
         except Exception as e:
-            print(f"    ✗ Error processing article: {type(e).__name__}")
+            print(f"    ✗ Error: {type(e).__name__}")
             continue
 
     # Close browser

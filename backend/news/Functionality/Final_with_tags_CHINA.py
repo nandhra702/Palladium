@@ -9,12 +9,12 @@ import time
 from supabase import create_client
 import json
 
-# SUPABASE credentials
-SUPABASE_URL = "https://mydfflfgggqoliryamtn.supabase.co"
-SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15ZGZmbGZnZ2dxb2xpcnlhbXRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE2Nzg5NTksImV4cCI6MjA3NzI1NDk1OX0.mVM685NQKkxUV0ja5TZC3jf3uio9HhW6_ugVLHmgb5U"
 
 # Import ArticleTagger
 from tagging import ArticleTagger
+
+SUPABASE_URL="https://mydfflfgggqoliryamtn.supabase.co"
+SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15ZGZmbGZnZ2dxb2xpcnlhbXRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE2Nzg5NTksImV4cCI6MjA3NzI1NDk1OX0.mVM685NQKkxUV0ja5TZC3jf3uio9HhW6_ugVLHmgb5U"
 
 
 
@@ -29,6 +29,10 @@ def scrape_and_tag_articles():
     except Exception as e:
         print(f"✗ Supabase connection error: {e}")
         return
+
+    # clear out whatever was there 
+    supabase.table("China_news").delete().neq("id", -1).execute()
+
 
     # browser
     try:
@@ -82,7 +86,7 @@ def scrape_and_tag_articles():
             articles.append((title, link))
             print("✓ Article:", title)
 
-            if len(articles) == 5:
+            if len(articles) == 10:
                 break
 
         except Exception:
@@ -101,7 +105,7 @@ def scrape_and_tag_articles():
 
     # -- PROCESS EACH ARTICLE --
     for idx, (title, link) in enumerate(articles, start=1):
-        print(f"\n[{idx}/5] Scraping: {title}")
+        print(f"\n[{idx}] Scraping: {title}")
 
         try:
             driver.get(link)
@@ -147,6 +151,7 @@ def scrape_and_tag_articles():
                     "tags": tags
                 }
 
+                
                 response = supabase.table("China_news").insert(db_row).execute()
                 print(f"    ✓ Saved to DB (ID: {response.data[0]['id']})")
 

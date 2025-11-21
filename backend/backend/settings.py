@@ -28,7 +28,7 @@ SECRET_KEY = 'django-insecure-_5zqa=d@ugl(h$)75tbs_j4@$jg9*n$g7p)%_!1+i^bqb9e6*a
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -82,10 +82,10 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'postgres',  # Usually 'postgres'
-        'USER': 'NOPE',
-        'PASSWORD': 'WONT SHOW YOU THAT',
-        'HOST': 'awom',
-        'PORT': '++',
+        'USER': 'postgres.mydfflfgggqoliryamtn',
+        'PASSWORD': 'Palladium@2310110310',
+        'HOST': 'aws-1-ap-southeast-1.pooler.supabase.com',
+        'PORT': '5432',
         'OPTIONS': {
             'sslmode': 'require',
         }

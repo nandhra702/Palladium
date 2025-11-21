@@ -11,22 +11,12 @@ import json
 import sys
 import os
 
-# # Add the project root to Python path
-# ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
-# sys.path.append(ROOT_DIR)
 
-SUPABASE_URL="https://mydfflfgggqoliryamtn.supabase.co"
-SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15ZGZmbGZnZ2dxb2xpcnlhbXRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE2Nzg5NTksImV4cCI6MjA3NzI1NDk1OX0.mVM685NQKkxUV0ja5TZC3jf3uio9HhW6_ugVLHmgb5U"
 # Import the ArticleTagger from tagging.py
 from tagging import ArticleTagger
 
-# Import Supabase credentials from settings.py
-# try:
-#     from backend.settings import SUPABASE_URL, SUPABASE_KEY
-# except ImportError:
-#     print("✗ Error: Could not import SUPABASE_URL and SUPABASE_KEY from settings.py")
-#     print("  Make sure settings.py exists with these variables defined.")
-#     exit(1)
+SUPABASE_URL="https://mydfflfgggqoliryamtn.supabase.co"
+SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im15ZGZmbGZnZ2dxb2xpcnlhbXRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE2Nzg5NTksImV4cCI6MjA3NzI1NDk1OX0.mVM685NQKkxUV0ja5TZC3jf3uio9HhW6_ugVLHmgb5U"
 
 # ---------- MAIN SCRAPER WITH TAGGING ----------
 def scrape_and_tag_articles():
@@ -71,7 +61,7 @@ def scrape_and_tag_articles():
         driver.quit()
         return
     
-    # Extract first 7 article links
+    # Extract first 10 article links
     articles = []
     for r in rows:
         try:
@@ -79,7 +69,7 @@ def scrape_and_tag_articles():
             link = r.get_attribute("href")
             if title and link and link.startswith("https://"):
                 articles.append((title, link))
-            if len(articles) == 5:
+            if len(articles) == 10:
                 break
         except Exception:
             continue

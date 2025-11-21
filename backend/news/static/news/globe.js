@@ -250,7 +250,7 @@ function displayNewsData(newsItems) {
         // Format tags
         const tagsHtml = item.tags && item.tags.length > 0 
             ? item.tags.map(tag => `<span style="
-                background: rgba(255, 255, 255, 0.2);
+                background: rgba(217, 13, 13, 0.33);
                 padding: 3px 8px;
                 border-radius: 12px;
                 font-size: 0.75rem;
@@ -262,7 +262,7 @@ function displayNewsData(newsItems) {
         
         html += `
             <div class="news-item" data-index="${index}" style="
-                background: rgba(255, 255, 255, 0.1);
+                background: rgba(255, 255, 255, 0.15);
                 border-radius: 8px;
                 padding: 15px;
                 margin-bottom: 15px;
